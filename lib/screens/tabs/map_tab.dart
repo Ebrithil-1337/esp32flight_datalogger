@@ -48,7 +48,7 @@ class MapTab extends StatelessWidget
                     height: 40,
                     child: Transform.rotate(
                       angle: appState.currentHeading * (3.14159 / 180), // Math rotation
-                      child: const Icon(Icons.flight, color: Colors.red, size: 40), // Plane
+                      child: const Icon(Icons.flight, color: Color(0xFFFFFFFF), size: 40), // Plane
                     ),
                   ),
                 ],

@@ -360,13 +360,13 @@ class AppState extends ChangeNotifier
         columnHeaders = []; // Clear
         for (int i = 0; i < firstRow.length; i++)
         { // Build dynamic headers
-          if (i == 0) columnHeaders.add("Time/ID");
-          else if (i == 1) columnHeaders.add("Temp 1 (°C)");
-          else if (i == 5) columnHeaders.add("Engine RPM");
-          else if (i == 9) columnHeaders.add("Latitude");
-          else if (i == 10) columnHeaders.add("Longitude");
-          else if (i == 11) columnHeaders.add("Battery (V)");
-          else columnHeaders.add("Sensor ${i + 1}"); // Fallback
+          if (i == 0) {columnHeaders.add("Time/ID");}
+          else if (i == 1) {columnHeaders.add("Temp 1 (°C)");}
+          else if (i == 5) {columnHeaders.add("Engine RPM");}
+          else if (i == 9) {columnHeaders.add("Latitude");}
+          else if (i == 10) {columnHeaders.add("Longitude");}
+          else if (i == 11) {columnHeaders.add("Battery (V)");}
+          else {columnHeaders.add("Sensor ${i + 1}");} // Fallback
         }
         replayIndex = 0; // Start at row 0
       }
@@ -448,15 +448,15 @@ class AppState extends ChangeNotifier
 
   void updateChartSensors(int chartIndex, int sensorIndex, bool isAdding)
   { // Configures ONE specific chart
-    if (isAdding) activeCharts[chartIndex].add(sensorIndex); // Add
-    else activeCharts[chartIndex].remove(sensorIndex); // Remove
+    if (isAdding) {activeCharts[chartIndex].add(sensorIndex);} // Add
+    else {activeCharts[chartIndex].remove(sensorIndex);} // Remove
     notifyListeners(); // Update UI
   }
 
   void updateLiveSensors(int sensorIndex, bool isAdding)
   { // Updates selected sensors for Live Data Tab
-    if (isAdding) selectedSensors.add(sensorIndex); // Add
-    else selectedSensors.remove(sensorIndex); // Remove
+    if (isAdding) {selectedSensors.add(sensorIndex);} // Add
+    else {selectedSensors.remove(sensorIndex);} // Remove
     notifyListeners(); // Update UI
   }
 }

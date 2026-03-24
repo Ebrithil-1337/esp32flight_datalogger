@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // Core UI
 import 'package:provider/provider.dart'; // State management
-import '../../../providers/app_state.dart'; // The Brain
+import '../../providers/app_state.dart'; // The Brain
 
 class DashboardTab extends StatelessWidget
 { // The Dashboard UI
