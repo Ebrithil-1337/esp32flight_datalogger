@@ -9,6 +9,7 @@ import 'dart:typed_data'; // Bytes
 import 'package:file_picker/file_picker.dart'; // File picking
 import 'dart:io'; // File saving
 import 'package:flutter_tts/flutter_tts.dart'; // Imports the TTS engine
+import 'package:shared_preferences/shared_preferences.dart'; // Local storage for saving settings
 
 class AppState extends ChangeNotifier
 { // The central brain holding all variables and logic
@@ -52,6 +53,8 @@ class AppState extends ChangeNotifier
   FlutterTts flutterTts = FlutterTts(); // Creates the speech engine
   bool hasAlertedLowVoltage = false; // Prevents the voice from spamming
   bool isGermanTTS = false; // Tracks the active TTS language
+  double voltageThreshold = 11.0; // Voltage level to trigger the alert
+  bool audibleAlertsEnabled = true; // Master switch for all voice alerts
 
 
 
@@ -90,10 +93,42 @@ class AppState extends ChangeNotifier
     return "$minStr:$secStr"; // Format cleanly
   }
 
-  void toggleTTSLanguage()
-  { // Switches between English and German
+  AppState()
+  { // This runs automatically when the app starts
+    _loadSavedSettings(); // Ask the phone for the saved configuration
+  }
+
+  Future<void> _loadSavedSettings() async
+  { // Pulls settings from the phone's hard drive
+    final prefs = await SharedPreferences.getInstance(); // Open storage
+    voltageThreshold = prefs.getDouble('voltageThreshold') ?? 11.0; // Load voltage
+    isGermanTTS = prefs.getBool('isGermanTTS') ?? false; // Load language
+    audibleAlertsEnabled = prefs.getBool('audibleAlertsEnabled') ?? true; // Load master switch, default to true
+    notifyListeners(); // Refresh UI
+  }
+
+  void toggleAudibleAlerts(bool value) async
+  { // Master switch toggle
+    audibleAlertsEnabled = value; // Update active memory
+    final prefs = await SharedPreferences.getInstance(); // Open storage
+    await prefs.setBool('audibleAlertsEnabled', value); // Save to hard drive
+    notifyListeners(); // Refresh UI
+  }
+
+  Future<void> setVoltageThreshold(double newThreshold) async
+  { // Saves the user's custom voltage limit
+    voltageThreshold = newThreshold; // Update active memory
+    final prefs = await SharedPreferences.getInstance(); // Open storage
+    await prefs.setDouble('voltageThreshold', newThreshold); // Save to hard drive
+    notifyListeners(); // Refresh UI
+  }
+
+  void toggleTTSLanguage() async
+  { // Switches between English and German and saves it
     isGermanTTS = !isGermanTTS; // Flip the boolean
-    notifyListeners(); // Update UI
+    final prefs = await SharedPreferences.getInstance(); // Open storage
+    await prefs.setBool('isGermanTTS', isGermanTTS); // Save to hard drive
+    notifyListeners(); // Refresh UI
   }
 
   void setTab(int index)
@@ -141,7 +176,7 @@ class AppState extends ChangeNotifier
     notifyListeners(); // Update UI
   }
 
-  void processDataRow(List<String> dataList)
+  void processDataRow(List<String> dataList, {bool isReplay = false})
   { // Organizes data into memory
     if (dataList.isEmpty || dataList[0].trim().isEmpty) return; // Ignore ghost rows
 
@@ -198,13 +233,13 @@ if (dataList.length > 11)
       double? batteryV = double.tryParse(dataList[11].trim()); // Extract voltage (Column 11)
       if (batteryV != null)
       { // If it is a valid number
-        if (batteryV <= 11.0 && !hasAlertedLowVoltage)
-        { // Threshold hit (e.g., 11.0V) and we haven't spoken yet
-          triggerVoltageAlert(batteryV); // Speak it out loud
-          hasAlertedLowVoltage = true; // Lock the voice so it doesn't spam
+        if (batteryV <= voltageThreshold && !hasAlertedLowVoltage)
+        { // Custom threshold hit and we haven't locked yet
+          if (!isReplay && audibleAlertsEnabled) triggerVoltageAlert(batteryV); // Speak ONLY if it's live AND alerts are on
+          hasAlertedLowVoltage = true; // Lock the state so visual alerts (later) still work correctly
         }
-        else if (batteryV >= 11.2)
-        { // Hysteresis: Only unlock the warning if voltage recovers a bit
+        else if (batteryV >= voltageThreshold + 0.2)
+        { // Hysteresis: Unlock the warning if voltage recovers
           hasAlertedLowVoltage = false; // Unlock
         }
       }
@@ -232,6 +267,8 @@ if (dataList.length > 11)
 
   Future<void> testTTS() async
   { // Manual debug trigger for the voice engine
+    if (!audibleAlertsEnabled) return; // Exit immediately if the master switch is turned off
+    
     await flutterTts.setVolume(1.0); // Max volume
     await flutterTts.setPitch(1.0); // Normal pitch
     
@@ -246,6 +283,7 @@ if (dataList.length > 11)
       await flutterTts.speak("Audio system is online and ready."); // English phrase
     }
   }
+  
   // --- EXPORT LOGIC ---
   Future<void> saveFlightData() async
   { // Automatically compiles and saves the recorded Bluetooth flight
@@ -462,7 +500,7 @@ if (dataList.length > 11)
       { // If running
         List<String> dataList = replayRows[replayIndex].split(','); // Chop
 
-        processDataRow(dataList); // Process
+        processDataRow(dataList, isReplay: true); // Process as a replay so audio is muted
 
         if (flightPath.isNotEmpty && selectedTab == 2 && mapLoaded)
         { // Camera logic
@@ -488,7 +526,7 @@ if (dataList.length > 11)
     for (int i = replayIndex; i < replayRows.length; i++)
     { // Loop remaining
       List<String> dataList = replayRows[i].split(','); // Chop
-      processDataRow(dataList); // Process
+      processDataRow(dataList, isReplay: true); // Process as a replay so audio is muted
     }
 
     replayIndex = replayRows.length; // Max out
