@@ -8,6 +8,7 @@ import 'dart:convert'; // UTF8
 import 'dart:typed_data'; // Bytes
 import 'package:file_picker/file_picker.dart'; // File picking
 import 'dart:io'; // File saving
+import 'package:flutter_tts/flutter_tts.dart'; // Imports the TTS engine
 
 class AppState extends ChangeNotifier
 { // The central brain holding all variables and logic
@@ -47,6 +48,14 @@ class AppState extends ChangeNotifier
   double timeCounter = 0; // X-axis position for charts
   List<List<FlSpot>> allSensorData = []; // Master list holding data for EVERY column
 
+  // --- TTS VARIABLES ---
+  FlutterTts flutterTts = FlutterTts(); // Creates the speech engine
+  bool hasAlertedLowVoltage = false; // Prevents the voice from spamming
+  bool isGermanTTS = false; // Tracks the active TTS language
+
+
+
+
   // --- SCALABLE CHART VARIABLES ---
   List<Set<int>> activeCharts = [{1}, {5}]; // Holds settings for dynamic charts
 
@@ -79,6 +88,12 @@ class AppState extends ChangeNotifier
     String minStr = minutes.toString().padLeft(2, '0'); // Add leading zero
     String secStr = seconds.toString().padLeft(2, '0'); // Add leading zero
     return "$minStr:$secStr"; // Format cleanly
+  }
+
+  void toggleTTSLanguage()
+  { // Switches between English and German
+    isGermanTTS = !isGermanTTS; // Flip the boolean
+    notifyListeners(); // Update UI
   }
 
   void setTab(int index)
@@ -178,10 +193,59 @@ class AppState extends ChangeNotifier
       }
       flightPath.add(newPoint); // Add to map
     }
+if (dataList.length > 11)
+    { // Make sure the row actually has the battery column
+      double? batteryV = double.tryParse(dataList[11].trim()); // Extract voltage (Column 11)
+      if (batteryV != null)
+      { // If it is a valid number
+        if (batteryV <= 11.0 && !hasAlertedLowVoltage)
+        { // Threshold hit (e.g., 11.0V) and we haven't spoken yet
+          triggerVoltageAlert(batteryV); // Speak it out loud
+          hasAlertedLowVoltage = true; // Lock the voice so it doesn't spam
+        }
+        else if (batteryV >= 11.2)
+        { // Hysteresis: Only unlock the warning if voltage recovers a bit
+          hasAlertedLowVoltage = false; // Unlock
+        }
+      }
+    }
 
     timeCounter++; // Move X-axis forward
   }
 
+  Future<void> triggerVoltageAlert(double voltage) async
+  { // The function that actually talks
+    await flutterTts.setVolume(1.0); // Max volume
+    await flutterTts.setPitch(1.0); // Normal voice pitch
+    
+    if (isGermanTTS)
+    { // German callout
+      await flutterTts.setLanguage("de-DE"); // Set German
+      await flutterTts.speak("Achtung. Batteriespannung ist kritisch bei $voltage Volt."); // German phrase
+    }
+    else
+    { // English callout
+      await flutterTts.setLanguage("en-US"); // Set English
+      await flutterTts.speak("Warning. Battery voltage is critical at $voltage volts."); // English phrase
+    }
+  }
+
+  Future<void> testTTS() async
+  { // Manual debug trigger for the voice engine
+    await flutterTts.setVolume(1.0); // Max volume
+    await flutterTts.setPitch(1.0); // Normal pitch
+    
+    if (isGermanTTS)
+    { // German test
+      await flutterTts.setLanguage("de-DE"); // Set German
+      await flutterTts.speak("Audiosystem ist online und bereit."); // German phrase
+    }
+    else
+    { // English test
+      await flutterTts.setLanguage("en-US"); // Set English
+      await flutterTts.speak("Audio system is online and ready."); // English phrase
+    }
+  }
   // --- EXPORT LOGIC ---
   Future<void> saveFlightData() async
   { // Automatically compiles and saves the recorded Bluetooth flight
@@ -459,4 +523,5 @@ class AppState extends ChangeNotifier
     else {selectedSensors.remove(sensorIndex);} // Remove
     notifyListeners(); // Update UI
   }
+  
 }

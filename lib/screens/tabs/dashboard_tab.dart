@@ -58,6 +58,27 @@ class DashboardTab extends StatelessWidget
             ),
           ),
           const SizedBox(height: 10), // Spacing
+
+          const SizedBox(height: 20), // Spacing
+          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center, // Center them
+            children: [
+              ElevatedButton.icon(
+                onPressed: appState.testTTS, // Triggers the voice test
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey), // Distinct color
+                icon: const Icon(Icons.volume_up, color: Colors.white), // Speaker icon
+                label: const Text('Test Audio', style: TextStyle(color: Colors.white)), // Text
+              ),
+              const SizedBox(width: 10), // Gap between buttons
+              ElevatedButton.icon(
+                onPressed: appState.toggleTTSLanguage, // Flips the language
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple), // Purple color
+                icon: const Icon(Icons.language, color: Colors.white), // Globe icon
+                label: Text(appState.isGermanTTS ? 'DE' : 'EN', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), // Dynamic Text
+              ),
+            ],
+          ),
           
           if (appState.totalDataRows > 0 && appState.replayIndex < appState.totalDataRows)
             ElevatedButton(
