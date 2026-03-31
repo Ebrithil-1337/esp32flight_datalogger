@@ -51,8 +51,39 @@ class AnalysisTab extends StatelessWidget
       }
     );
   }
+  void _showRenameDialog(BuildContext context, AppState appState, int index)
+  { // Popup to rename a sensor
+    TextEditingController controller = TextEditingController(text: appState.getSensorName(index)); // Pre-fill current name
+    showDialog(
+      context: context,
+      builder: (context)
+      { // Build popup
+        return AlertDialog(
+          title: const Text('Rename Sensor'), // Title
+          content: TextField(
+            controller: controller, // Input field
+            decoration: const InputDecoration(hintText: 'Enter name or leave blank to reset'), // Hint
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Cancel
+              child: const Text('Cancel'), // Text
+            ),
+            TextButton(
+              onPressed: ()
+              { // Save
+                appState.updateSensorName(index, controller.text); // Send to memory
+                Navigator.pop(context); // Close
+              },
+              child: const Text('Save'), // Text
+            ),
+          ],
+        );
+      }
+    );
+  }
 
-  Widget buildChartLegend(AppState appState, Set<int> sensorsToDraw)
+  Widget buildChartLegend(AppState appState, Set<int> sensorsToDraw, BuildContext context)
   { // Helper to draw colored text labels
     if (sensorsToDraw.isEmpty) return const Text('Tap the Gear Icon to assign sensors', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)); // Fallback
     
@@ -61,16 +92,19 @@ class AnalysisTab extends StatelessWidget
       runSpacing: 4, // Vertical gap
       children: sensorsToDraw.map((idx)
       { // Loop
-        String name = idx < appState.columnHeaders.length ? appState.columnHeaders[idx] : "Sensor ${idx + 1}"; // Pull name
+        String name = appState.getSensorName(idx); // Get central name
         Color lineCol = appState.chartColors[idx % appState.chartColors.length]; // Pull color
         
-        return Row(
-          mainAxisSize: MainAxisSize.min, // Keep tight
-          children: [
-            Container(width: 12, height: 12, color: lineCol), // Box
-            const SizedBox(width: 4), // Gap
-            Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)), // Text
-          ],
+        return GestureDetector(
+          onLongPress: () => _showRenameDialog(context, appState, idx), // Trigger popup
+          child: Row(
+            mainAxisSize: MainAxisSize.min, // Keep tight
+            children: [
+              Container(width: 12, height: 12, color: lineCol), // Box
+              const SizedBox(width: 4), // Gap
+              Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)), // Text
+            ],
+          ),
         );
       }).toList(),
     );
@@ -132,7 +166,7 @@ class AnalysisTab extends StatelessWidget
                                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space
                                crossAxisAlignment: CrossAxisAlignment.start, // Top align
                                children: [
-                                 Expanded(child: buildChartLegend(appState, appState.activeCharts[index])), // Dynamic legend
+                                 Expanded(child: buildChartLegend(appState, appState.activeCharts[index], context)), // Dynamic legend
                                  Row(
                                    children: [
                                      IconButton(

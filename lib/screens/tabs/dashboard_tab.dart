@@ -18,28 +18,29 @@ class DashboardTab extends StatelessWidget
           builder: (context, setDialogState)
           { // Allow the popup itself to update visually when buttons are pressed
             return AlertDialog(
-              title: const Text('Dashboard Settings'), // Title
+              title: Text(appState.tr('Dashboard Settings')), // Translated Title
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min, // Wrap content tightly
                   children: [
                     SwitchListTile(
-                      title: const Text('Enable Audible Alerts', style: TextStyle(fontWeight: FontWeight.bold)), // Label
+                      title: Text(appState.tr('Enable Audible Alerts'), style: const TextStyle(fontWeight: FontWeight.bold)), // Translated Label
+                      subtitle: Text(appState.tr('Master toggle for all voice warnings')), // Translated Description
                       value: appState.audibleAlertsEnabled, // Bind to brain
-                      activeThumbColor: const Color.fromARGB(255, 33, 243, 61), // Theme color
+                      activeThumbColor: Colors.blue, // Replaced activeColor with activeThumbColor
                       onChanged: (bool value)
                       { // Toggled
-                        appState.toggleAudibleAlerts(value); // Update and save to phone
-                        setDialogState(() {}); // Force the popup to redraw the switch animation
+                        appState.toggleAudibleAlerts(value); // Update and save
+                        setDialogState(() {}); // Force the popup to redraw
                       },
                     ),
                     const SizedBox(height: 10), // Spacing
                     TextField(
                       controller: voltageController, // Binds the text box
                       keyboardType: const TextInputType.numberWithOptions(decimal: true), // Force a number pad
-                      decoration: const InputDecoration(
-                        labelText: 'Voltage Warning Threshold (V)', // Floating label
-                        border: OutlineInputBorder(), // Clean box border
+                      decoration: InputDecoration(
+                        labelText: appState.tr('Voltage Warning Threshold (V)'), // Translated Floating label
+                        border: const OutlineInputBorder(), // Clean box border
                       ),
                       onChanged: (value)
                       { // Triggers every time you type a number
@@ -58,17 +59,17 @@ class DashboardTab extends StatelessWidget
                           onPressed: appState.testTTS, // Triggers the voice test
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey), // Distinct color
                           icon: const Icon(Icons.volume_up, color: Colors.white), // Speaker icon
-                          label: const Text('Test', style: TextStyle(color: Colors.white)), // Text
+                          label: Text(appState.tr('Test Audio'), style: const TextStyle(color: Colors.white)), // Translated Text
                         ),
                         ElevatedButton.icon(
                           onPressed: ()
                           { // Language toggle wrapper
-                            appState.toggleTTSLanguage(); // Flips the language in the brain
+                            appState.toggleLanguage(); // Flips the language in the brain
                             setDialogState(() {}); // Force the popup to redraw to show DE/EN text change
                           },
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.purple), // Purple color
                           icon: const Icon(Icons.language, color: Colors.white), // Globe icon
-                          label: Text(appState.isGermanTTS ? 'DE' : 'EN', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), // Dynamic Text
+                          label: Text(appState.isAppInGerman ? 'DE' : 'EN', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), // Dynamic Text
                         ),
                       ],
                     ),
@@ -81,7 +82,7 @@ class DashboardTab extends StatelessWidget
                       },
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.red), // Danger color
                       icon: const Icon(Icons.delete_forever, color: Colors.white), // Trash icon
-                      label: const Text('Clear Session', style: TextStyle(color: Colors.white)), // Text
+                      label: Text(appState.tr('Clear Session'), style: const TextStyle(color: Colors.white)), // Translated Text
                     ),
                   ],
                 ),
@@ -89,7 +90,7 @@ class DashboardTab extends StatelessWidget
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(), // Close button
-                  child: const Text('Close'), // Text
+                  child: Text(appState.tr('Close')), // Translated Text
                 ),
               ],
             );
@@ -113,25 +114,25 @@ class DashboardTab extends StatelessWidget
               Text(appState.connectionStatus, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)), // Status
               const SizedBox(height: 40), // Spacing
               
-              const Text('Session Duration', style: TextStyle(fontSize: 20, color: Colors.grey)), // Time Label
+              Text(appState.tr('Session Duration'), style: const TextStyle(fontSize: 20, color: Colors.grey)), // Translated Time Label
               Text(appState.formattedSessionTime, style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold)), // Time Counter
               const SizedBox(height: 40), // Spacing
               
               if (appState.connectedDevice == null)
                 ElevatedButton(
                   onPressed: appState.startScan, // Scan
-                  child: const Padding(
-                    padding: EdgeInsets.all(12.0), // Padding
-                    child: Text('Connect to ESP32', style: TextStyle(fontSize: 20)), // Text
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0), // Padding
+                    child: Text(appState.tr('Connect to ESP32'), style: const TextStyle(fontSize: 20)), // Translated Text
                   ),
                 )
               else
                 ElevatedButton(
                   onPressed: appState.disconnectFromDevice, // Disconnect
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent), // Red color
-                  child: const Padding(
-                    padding: EdgeInsets.all(12.0), // Padding
-                    child: Text('Disconnect', style: TextStyle(fontSize: 20, color: Colors.white)), // Text
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0), // Padding
+                    child: Text(appState.tr('Disconnect'), style: const TextStyle(fontSize: 20, color: Colors.white)), // Translated Text
                   ),
                 ),
                 
@@ -149,7 +150,7 @@ class DashboardTab extends StatelessWidget
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green), // Green
                 child: Padding(
                   padding: const EdgeInsets.all(12.0), // Padding
-                  child: Text(appState.connectedDevice == null ? 'Load Saved CSV File' : 'Disconnect and load saved csv file', style: const TextStyle(fontSize: 20, color: Colors.white)), // Dynamic Text
+                  child: Text(appState.connectedDevice == null ? appState.tr('Load Saved CSV File') : appState.tr('Load Saved CSV File'), style: const TextStyle(fontSize: 20, color: Colors.white)), // Translated Dynamic Text
                 ),
               ),
               const SizedBox(height: 10), // Spacing

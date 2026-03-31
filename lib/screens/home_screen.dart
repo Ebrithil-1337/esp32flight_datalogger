@@ -17,18 +17,19 @@ class HomeScreen extends StatelessWidget
     final appState = Provider.of<AppState>(context); // Connect to the Brain
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Flight Analyzer'), // App bar title
+     appBar: AppBar(
+        title: Text(appState.tr('Flight Analyzer')), // Translated app bar title
       ),
       body: IndexedStack(
-        index: appState.selectedTab, // Read current tab from Brain
+        index: appState.selectedTab, // Read current tab
         children: const [
           DashboardTab(), // Index 0
           AnalysisTab(), // Index 1
-          MapTab(), // Index 2
+          MapTab(), // Index 2 (Make sure this line exists!)
           LiveDataTab(), // Index 3
         ],
       ),
+      // ... (Keep the body IndexedStack exactly the same) ...
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: appState.selectedTab, // Read active index
         type: BottomNavigationBarType.fixed, // Prevent hiding
@@ -36,11 +37,11 @@ class HomeScreen extends StatelessWidget
         { // Tab clicked
           appState.setTab(index); // Tell Brain to switch tabs
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'), // Btn 0
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Analysis'), // Btn 1
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'), // Btn 2
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Live Data'), // Btn 3
+        items: [
+          BottomNavigationBarItem(icon: const Icon(Icons.dashboard), label: appState.tr('Dashboard')), // Btn 0
+          BottomNavigationBarItem(icon: const Icon(Icons.show_chart), label: appState.tr('Analysis')), // Btn 1
+          BottomNavigationBarItem(icon: const Icon(Icons.map), label: appState.tr('Map')), // Btn 2
+          BottomNavigationBarItem(icon: const Icon(Icons.list_alt), label: appState.tr('Live Data')), // Btn 3
         ],
       ),
     );

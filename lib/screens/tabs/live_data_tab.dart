@@ -50,6 +50,37 @@ class LiveDataTab extends StatelessWidget
       }
     );
   }
+  void _showRenameDialog(BuildContext context, AppState appState, int index)
+  { // Popup to rename a sensor
+    TextEditingController controller = TextEditingController(text: appState.getSensorName(index)); // Pre-fill current name
+    showDialog(
+      context: context,
+      builder: (context)
+      { // Build popup
+        return AlertDialog(
+          title: const Text('Rename Sensor'), // Title
+          content: TextField(
+            controller: controller, // Input field
+            decoration: const InputDecoration(hintText: 'Enter name or leave blank to reset'), // Hint
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Cancel
+              child: const Text('Cancel'), // Text
+            ),
+            TextButton(
+              onPressed: ()
+              { // Save
+                appState.updateSensorName(index, controller.text); // Send to memory
+                Navigator.pop(context); // Close
+              },
+              child: const Text('Save'), // Text
+            ),
+          ],
+        );
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext context)
@@ -88,19 +119,22 @@ class LiveDataTab extends StatelessWidget
                     { // Draw card
                       int dataIndex = displayIndices[gridIndex]; // Number
                       if (dataIndex >= appState.latestDataRow.length) return const SizedBox(); // Safety
-                      String label = dataIndex < appState.columnHeaders.length ? appState.columnHeaders[dataIndex] : "Sensor ${dataIndex + 1}"; // Label
+                      String label = appState.getSensorName(dataIndex); // Get central name
                       
-                      return Card(
-                        elevation: 3, // Shadow
-                        color: Colors.white, // BG
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0), // Inner Pad
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center, // Center
-                            children: [
-                              Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey), overflow: TextOverflow.ellipsis), // Name
-                              Text(appState.latestDataRow[dataIndex], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), // Value
-                            ],
+                      return InkWell(
+                        onLongPress: () => _showRenameDialog(context, appState, dataIndex), // Trigger popup
+                        child: Card(
+                          elevation: 3, // Shadow
+                          color: Colors.white, // BG
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0), // Inner Pad
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center, // Center
+                              children: [
+                                Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey), overflow: TextOverflow.ellipsis), // Name
+                                Text(appState.latestDataRow[dataIndex], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), // Value
+                              ],
+                            ),
                           ),
                         ),
                       );

@@ -11,6 +11,8 @@ import 'dart:io'; // File saving
 import 'package:flutter_tts/flutter_tts.dart'; // Imports the TTS engine
 import 'package:shared_preferences/shared_preferences.dart'; // Local storage for saving settings
 
+
+
 class AppState extends ChangeNotifier
 { // The central brain holding all variables and logic
 
@@ -52,10 +54,12 @@ class AppState extends ChangeNotifier
   // --- TTS VARIABLES ---
   FlutterTts flutterTts = FlutterTts(); // Creates the speech engine
   bool hasAlertedLowVoltage = false; // Prevents the voice from spamming
-  bool isGermanTTS = false; // Tracks the active TTS language
+
   double voltageThreshold = 11.0; // Voltage level to trigger the alert
   bool audibleAlertsEnabled = true; // Master switch for all voice alerts
 
+  // --- Language Variables ---
+  bool isAppInGerman = false; // Tracks the active UI language
 
 
 
@@ -97,14 +101,44 @@ class AppState extends ChangeNotifier
   { // This runs automatically when the app starts
     _loadSavedSettings(); // Ask the phone for the saved configuration
   }
+Map<int, String> customSensorNames = {}; // Stores custom names by index
 
   Future<void> _loadSavedSettings() async
   { // Pulls settings from the phone's hard drive
     final prefs = await SharedPreferences.getInstance(); // Open storage
     voltageThreshold = prefs.getDouble('voltageThreshold') ?? 11.0; // Load voltage
-    isGermanTTS = prefs.getBool('isGermanTTS') ?? false; // Load language
-    audibleAlertsEnabled = prefs.getBool('audibleAlertsEnabled') ?? true; // Load master switch, default to true
+    isAppInGerman = prefs.getBool('isAppInGerman') ?? false; // Load language
+    audibleAlertsEnabled = prefs.getBool('audibleAlertsEnabled') ?? true; // Load master switch
+    
+    String? namesJson = prefs.getString('customSensorNames'); // Load names string
+    if (namesJson != null)
+    { // If custom names exist
+      Map<String, dynamic> decoded = jsonDecode(namesJson); // Decode JSON
+      customSensorNames = decoded.map((k, v) => MapEntry(int.parse(k), v.toString())); // Parse back to integer map
+    }
     notifyListeners(); // Refresh UI
+  }
+
+  String getSensorName(int index)
+  { // Retrieves the display name
+    if (customSensorNames.containsKey(index)) return customSensorNames[index]!; // Return customized name
+    if (index < columnHeaders.length) return columnHeaders[index]; // Return CSV name
+    return "Sensor ${index + 1}"; // Fallback
+  }
+
+  Future<void> updateSensorName(int index, String newName) async
+  { // Saves the customized name
+    if (newName.trim().isEmpty)
+    { // If blank, reset to default CSV name
+      customSensorNames.remove(index); // Remove from map
+    }
+    else
+    { // Otherwise update
+      customSensorNames[index] = newName.trim(); // Save to map
+    }
+    final prefs = await SharedPreferences.getInstance(); // Open storage
+    await prefs.setString('customSensorNames', jsonEncode(customSensorNames.map((k, v) => MapEntry(k.toString(), v)))); // Save map as JSON
+    notifyListeners(); // Refresh UI everywhere instantly
   }
 
   void toggleAudibleAlerts(bool value) async
@@ -123,12 +157,37 @@ class AppState extends ChangeNotifier
     notifyListeners(); // Refresh UI
   }
 
-  void toggleTTSLanguage() async
-  { // Switches between English and German and saves it
-    isGermanTTS = !isGermanTTS; // Flip the boolean
+  void toggleLanguage() async
+  { // Switches global language and saves it
+    isAppInGerman = !isAppInGerman; // Flip the boolean
     final prefs = await SharedPreferences.getInstance(); // Open storage
-    await prefs.setBool('isGermanTTS', isGermanTTS); // Save to hard drive
-    notifyListeners(); // Refresh UI
+    await prefs.setBool('isAppInGerman', isAppInGerman); // Save to hard drive
+    notifyListeners(); // Refresh UI everywhere instantly
+  }
+
+  final Map<String, Map<String, String>> _dictionary = { // The translation memory bank
+    'Flight Analyzer': {'en': 'Flight Analyzer', 'de': 'Flight Analyzer'},
+    'Dashboard': {'en': 'Dashboard', 'de': 'Dashboard'},
+    'Analysis': {'en': 'Analysis', 'de': 'Analyse'},
+    'Map': {'en': 'Map', 'de': 'Karte'},
+    'Live Data': {'en': 'Live Data', 'de': 'Live-Daten'},
+    'Session Duration': {'en': 'Session Duration', 'de': 'Sitzungsdauer'},
+    'Connect to ESP32': {'en': 'Connect to ESP32', 'de': 'Mit ESP32 verbinden'},
+    'Disconnect': {'en': 'Disconnect', 'de': 'Trennen'},
+    'Load Saved CSV File': {'en': 'Load Saved CSV', 'de': 'Gespeicherte CSV laden'},
+    'Clear Session': {'en': 'Clear Session', 'de': 'Sitzung daten löschen'},
+    'Test Audio': {'en': 'Test Audio', 'de': 'Audio testen'},
+    'Dashboard Settings': {'en': 'Dashboard Settings', 'de': 'Dashboard-Einstellungen'},
+    'Voltage Warning Threshold (V)': {'en': 'Voltage Warning Threshold (V)', 'de': 'Spannungswarnung (V)'},
+    'Enable Audible Alerts': {'en': 'Enable Audible Alerts', 'de': 'Akustische Warnungen aktivieren'},
+    'Master toggle for all voice warnings': {'en': 'Master toggle for all voice warnings', 'de': 'Hauptschalter für alle Sprachwarnungen'},
+    'Close': {'en': 'Close', 'de': 'Schließen'},
+  };
+
+  String tr(String key)
+  { // Translates a string based on the current language
+    if (!_dictionary.containsKey(key)) return key; // Return original if not found in dictionary
+    return _dictionary[key]![isAppInGerman ? 'de' : 'en'] ?? key; // Return translated string
   }
 
   void setTab(int index)
@@ -253,7 +312,7 @@ if (dataList.length > 11)
     await flutterTts.setVolume(1.0); // Max volume
     await flutterTts.setPitch(1.0); // Normal voice pitch
     
-    if (isGermanTTS)
+    if (isAppInGerman)
     { // German callout
       await flutterTts.setLanguage("de-DE"); // Set German
       await flutterTts.speak("Achtung. Batteriespannung ist kritisch bei $voltage Volt."); // German phrase
@@ -272,7 +331,7 @@ if (dataList.length > 11)
     await flutterTts.setVolume(1.0); // Max volume
     await flutterTts.setPitch(1.0); // Normal pitch
     
-    if (isGermanTTS)
+    if (isAppInGerman)
     { // German test
       await flutterTts.setLanguage("de-DE"); // Set German
       await flutterTts.speak("Audiosystem ist online und bereit."); // German phrase
