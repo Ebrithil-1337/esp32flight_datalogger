@@ -94,7 +94,7 @@ class DashboardTab extends StatelessWidget
                    ElevatedButton.icon(
                       onPressed: () => showSensorPicker(context, appState, setDialogState), // Triggers the new popup list
                       icon: const Icon(Icons.add), // Plus
-                      label: const Text('Add monitored Threshold'), // Text
+                      label: Text(appState.tr('Add monitored Threshold')), // Translated Text
                     ),
                     const SizedBox(height: 10), // Spacing
                     
@@ -121,7 +121,7 @@ class DashboardTab extends StatelessWidget
                               child: TextFormField(
                                 initialValue: limit.toString(), // Pre-fill with current saved number
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true), // Number pad
-                                decoration: const InputDecoration(labelText: 'Limit', border: OutlineInputBorder()), // Box style
+                                decoration: InputDecoration(labelText: appState.tr('Limit'), border: const OutlineInputBorder()), // Translated label
                                 onChanged: (value)
                                 { // Triggers every time you type
                                   double? parsed = double.tryParse(value); // Convert string to number safely

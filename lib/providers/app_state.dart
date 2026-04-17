@@ -239,6 +239,10 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
     'Device not found, try again': {'en': 'Device not found, try again', 'de': 'Gerät nicht gefunden, bitte erneut versuchen'},
     'Connecting...': {'en': 'Connecting...', 'de': 'Verbinden...'},
     'Connected to FlightLogger!': {'en': 'Connected to FlightLogger!', 'de': 'Mit FlightLogger verbunden!'},
+    'No file loaded': {'en': 'No file loaded', 'de': 'Keine Datei geladen'},
+    'Rename Sensor': {'en': 'Rename Sensor', 'de': 'Sensor umbenennen'},
+    'Add monitored Threshold': {'en': 'Add monitored Threshold', 'de': 'Grenzwert Überwachung hinzufügen'},
+    'limit': {'en': 'limit', 'de': 'Grenzwert'},
   };
 
   String tr(String key)
