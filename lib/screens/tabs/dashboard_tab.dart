@@ -10,6 +10,41 @@ class DashboardTab extends StatelessWidget
   { // Opens the settings popup
     TextEditingController voltageController = TextEditingController(text: appState.voltageThreshold.toString()); // Pre-fill with current saved value
 
+  void showSensorPicker(BuildContext context, AppState appState, void Function(void Function()) setParentDialogState)
+  { // Shows a list of available sensors to monitor
+    int maxCols = appState.columnHeaders.length > 1 ? appState.columnHeaders.length : 12; // Find how many sensors exist
+
+    // Create a list of sensors, skipping the Time column (0) and any sensors already being monitored
+    List<int> availableSensors = List.generate(maxCols, (index) => index).where((i) => i > 0 && !appState.customThresholds.containsKey(i)).toList(); 
+
+    showDialog(
+      context: context,
+      builder: (BuildContext pickerContext)
+      { // Build the picker popup
+        return AlertDialog(
+          title: const Text('Select Sensor'), // Title
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min, // Keep tight
+              children: availableSensors.map((sIndex)
+              { // Loop through the available sensors
+                return ListTile(
+                  title: Text(appState.getSensorName(sIndex)), // Show your custom Analysis tab name
+                  onTap: ()
+                  { // When clicked
+                    appState.addNewThreshold(sIndex); // Send the choice to the Brain
+                    setParentDialogState(() {}); // Force the main settings menu to redraw
+                    Navigator.pop(pickerContext); // Close this picker popup
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      }
+    );
+  }
+
     showDialog(
       context: context,
       builder: (BuildContext dialogContext)
@@ -55,6 +90,61 @@ class DashboardTab extends StatelessWidget
                         }
                       },
                     ),
+                    const SizedBox(height: 10), // Spacing
+                   ElevatedButton.icon(
+                      onPressed: () => showSensorPicker(context, appState, setDialogState), // Triggers the new popup list
+                      icon: const Icon(Icons.add), // Plus
+                      label: const Text('Add monitored Threshold'), // Text
+                    ),
+                    const SizedBox(height: 10), // Spacing
+                    
+                    ...appState.customThresholds.entries.map((entry)
+                    { // Loop through all dynamic thresholds
+                      int sIndex = entry.key; // Get the sensor index
+                      double limit = entry.value; // Get the current limit
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0), // Gap above each row
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2, // Give the name more horizontal space
+                              child: Text(
+                                appState.getSensorName(sIndex), // Displays your custom name!
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), // Bold text
+                                overflow: TextOverflow.ellipsis, // Prevents text from pushing off screen
+                              ),
+                            ),
+                            const SizedBox(width: 8), // Gap
+                            Expanded(
+                              flex: 1, // Give the text box less space
+                              child: TextFormField(
+                                initialValue: limit.toString(), // Pre-fill with current saved number
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true), // Number pad
+                                decoration: const InputDecoration(labelText: 'Limit', border: OutlineInputBorder()), // Box style
+                                onChanged: (value)
+                                { // Triggers every time you type
+                                  double? parsed = double.tryParse(value); // Convert string to number safely
+                                  if (parsed != null)
+                                  { // If it is valid
+                                    appState.updateThresholdValue(sIndex, parsed); // Save quietly
+                                  }
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red), // Trash can
+                              onPressed: ()
+                              { // Clicked delete
+                                appState.deleteThreshold(sIndex); // Remove from Brain
+                                setDialogState(() {}); // Force popup to redraw
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  
                     const SizedBox(height: 20), // Spacing
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween, // Push buttons apart

@@ -60,6 +60,10 @@ class AppState extends ChangeNotifier
 
   // --- Language Variables ---
   bool isAppInGerman = false; // Tracks the active UI language
+  
+// --- DYNAMIC ALERT VARIABLES ---
+  Set<int> activeAlarms = {}; // Remembers which sensors are currently triggered so it does not spam
+
 
 
 
@@ -116,6 +120,14 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
       Map<String, dynamic> decoded = jsonDecode(namesJson); // Decode JSON
       customSensorNames = decoded.map((k, v) => MapEntry(int.parse(k), v.toString())); // Parse back to integer map
     }
+
+    String? thresholdsJson = prefs.getString('customThresholds'); // Load dynamic thresholds
+    if (thresholdsJson != null)
+    { // If they exist
+      Map<String, dynamic> decoded = jsonDecode(thresholdsJson); // Decode JSON
+      customThresholds = decoded.map((k, v) => MapEntry(int.parse(k), (v as num).toDouble())); // Parse back to integers and doubles
+    }
+
     if (connectedDevice == null)
     { // Only update if no device connected in the background
       connectionStatus = tr('Disconnected'); // Apply the correct language string
@@ -161,6 +173,41 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
     await prefs.setDouble('voltageThreshold', newThreshold); // Save to hard drive
     notifyListeners(); // Refresh UI
   }
+  // --- DYNAMIC THRESHOLD VARIABLES ---
+  Map<int, double> customThresholds = {}; // Maps a Sensor Index to a specific Voltage/Warning Limit
+
+  // --- DYNAMIC THRESHOLD FUNCTIONS ---
+  void addNewThreshold(int sensorIndex)
+  { // Adds a new threshold for the specifically chosen sensor
+    if (!customThresholds.containsKey(sensorIndex))
+    { // Only add if it isn't already being monitored
+      customThresholds[sensorIndex] = 0.0; // Default starting limit
+      _saveCustomThresholds(); // Save to hard drive
+      notifyListeners(); // Refresh UI
+    }
+  }
+
+  void updateThresholdValue(int index, double newValue)
+  { // Updates the warning number limit for a specific sensor
+    customThresholds[index] = newValue; // Update memory
+    _saveCustomThresholds(); // Save to hard drive
+    // NOTE: We do NOT call notifyListeners() here, so the keyboard doesn't violently close while typing!
+  }
+
+  void deleteThreshold(int index)
+  { // Removes a sensor from the monitoring list
+    customThresholds.remove(index); // Delete
+    _saveCustomThresholds(); // Save to hard drive
+    notifyListeners(); // Refresh UI
+  }
+
+  Future<void> _saveCustomThresholds() async
+  { // Saves the map safely to the phone's hard drive
+    final prefs = await SharedPreferences.getInstance(); // Open storage
+    Map<String, dynamic> stringKeyMap = customThresholds.map((k, v) => MapEntry(k.toString(), v)); // Convert integer keys to strings for JSON
+    await prefs.setString('customThresholds', jsonEncode(stringKeyMap)); // Save
+  }
+
 
   void toggleLanguage() async
   { // Switches global language and saves it
@@ -242,6 +289,8 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
     visibleMaxX = 100; // Reset zoom
     currentHeading = 0.0; // Reset rotation
 
+    activeAlarms.clear();
+
     notifyListeners(); // Update UI
   }
 
@@ -313,7 +362,27 @@ if (dataList.length > 11)
         }
       }
     }
-
+// --- DYNAMIC THRESHOLD CHECK ---
+    customThresholds.forEach((sIndex, limit)
+    { // Loop through every custom threshold the user created
+      if (sIndex < dataList.length)
+      { // Make sure this column actually exists in the current CSV row
+        double? currentValue = double.tryParse(dataList[sIndex].trim()); // Extract the number
+        if (currentValue != null)
+        { // If it is valid
+          // NOTE: Assuming these are UPPER limits (like Temperature or RPM getting too high)
+          if (currentValue >= limit && !activeAlarms.contains(sIndex))
+          { // Limit hit and we haven't locked this sensor yet
+            if (!isReplay && audibleAlertsEnabled) triggerDynamicAlert(sIndex, currentValue); // Speak
+            activeAlarms.add(sIndex); // Lock this sensor so it doesn't spam
+          }
+          else if (currentValue <= limit - 0.5)
+          { // Hysteresis: Unlock the warning if the value drops safely below the limit
+            activeAlarms.remove(sIndex); // Unlock
+          }
+        }
+      }
+    });
     timeCounter++; // Move X-axis forward
   }
 
@@ -333,6 +402,29 @@ if (dataList.length > 11)
       await flutterTts.speak("Warning. Battery voltage is critical at $voltage volts."); // English phrase
     }
   }
+  
+  Future<void> triggerDynamicAlert(int sensorIndex, double currentValue) async
+  { // The generic voice function for custom thresholds
+    if (!audibleAlertsEnabled) return; // Obey master switch
+    
+    String sensorName = getSensorName(sensorIndex); // Look up the custom name
+    
+    await flutterTts.setVolume(1.0); // Max volume
+    await flutterTts.setPitch(1.0); // Normal voice pitch
+    
+    if (isAppInGerman)
+    { // German phrase
+      await flutterTts.setLanguage("de-DE"); // Set German
+      await flutterTts.speak("Achtung. Limit für $sensorName erreicht. Wert ist $currentValue."); // Speak
+    }
+    else
+    { // English phrase
+      await flutterTts.setLanguage("en-US"); // Set English
+      await flutterTts.speak("Warning. $sensorName threshold reached. Value is $currentValue."); // Speak
+    }
+  }
+  
+  
 
   Future<void> testTTS() async
   { // Manual debug trigger for the voice engine
@@ -344,12 +436,12 @@ if (dataList.length > 11)
     if (isAppInGerman)
     { // German test
       await flutterTts.setLanguage("de-DE"); // Set German
-      await flutterTts.speak("Audiosystem ist online und bereit."); // German phrase
+      await flutterTts.speak("Achtung. Audio-System ist online und bereit."); // German phrase
     }
     else
     { // English test
       await flutterTts.setLanguage("en-US"); // Set English
-      await flutterTts.speak("Audio system is online and ready."); // English phrase
+      await flutterTts.speak("Your Bluetooth Device is Ready to Pair."); // English phrase
     }
   }
   
