@@ -17,7 +17,7 @@ class AppState extends ChangeNotifier
 { // The central brain holding all variables and logic
 
   // --- DASHBOARD VARIABLES ---
-  String connectionStatus = "Disconnected"; // Shows if paired
+  String connectionStatus = 'Disconnected'; // Shows if paired
   BluetoothDevice? connectedDevice; // Remembers the active ESP32 connection
   StreamSubscription<List<int>>? bleStream; // Saves the data stream
 
@@ -25,7 +25,7 @@ class AppState extends ChangeNotifier
   List<String> recordedRows = []; // Memory bank for saving live Bluetooth data
 
   // --- REPLAY VARIABLES ---
-  String loadedFileName = "No file loaded"; // Holds selected file name
+  String loadedFileName = 'No file loaded'; // Holds selected file name
   int totalDataRows = 0; // Counts total rows
   Timer? playbackTimer; // Looping timer
   List<String> replayRows = []; // Holds all CSV text
@@ -116,6 +116,11 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
       Map<String, dynamic> decoded = jsonDecode(namesJson); // Decode JSON
       customSensorNames = decoded.map((k, v) => MapEntry(int.parse(k), v.toString())); // Parse back to integer map
     }
+    if (connectedDevice == null)
+    { // Only update if no device connected in the background
+      connectionStatus = tr('Disconnected'); // Apply the correct language string
+    }
+
     notifyListeners(); // Refresh UI
   }
 
@@ -182,7 +187,7 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
     'Enable Audible Alerts': {'en': 'Enable Audible Alerts', 'de': 'Akustische Warnungen aktivieren'},
     'Master toggle for all voice warnings': {'en': 'Master toggle for all voice warnings', 'de': 'Hauptschalter für alle Sprachwarnungen'},
     'Close': {'en': 'Close', 'de': 'Schließen'},
-    'Disconnected': {'en': 'Disconnected', 'de': 'Getrennt'},
+    'Disconnected': {'en': 'Disconnected', 'de': 'Disconnected'},
     'Scanning...': {'en': 'Scanning...', 'de': 'Suche...'},
     'Device not found, try again': {'en': 'Device not found, try again', 'de': 'Gerät nicht gefunden, bitte erneut versuchen'},
     'Connecting...': {'en': 'Connecting...', 'de': 'Verbinden...'},
@@ -219,8 +224,8 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
   { // Instantly wipes all memory and resets the app
     playbackTimer?.cancel(); // Kill any running replays
 
-    if (connectedDevice == null) connectionStatus = "Disconnected"; // Only reset text if we are not connected
-    loadedFileName = "No file loaded"; // Reset file text
+    if (connectedDevice == null) connectionStatus = tr('Disconnected'); // Only reset text if we are not connected
+    loadedFileName = tr('No file loaded'); // Reset file text
     totalDataRows = 0; // Reset row count
     replayRows.clear(); // Delete file from memory
     replayIndex = 0; // Reset counter
@@ -387,7 +392,7 @@ if (dataList.length > 11)
   // --- BLUETOOTH LOGIC ---
   void startScan() async
   { // Start scanning
-    connectionStatus = "Scanning..."; // Status
+    connectionStatus = tr('Scanning...'); // Status
     notifyListeners(); // Update UI
 
     var subscription = FlutterBluePlus.onScanResults.listen((results)
@@ -407,16 +412,16 @@ if (dataList.length > 11)
 
     subscription.cancel(); // Clean up listener
 
-    if (connectionStatus == "Scanning...")
+    if (connectionStatus == tr('Scanning...'))
     { // Never found
-      connectionStatus = "Device not found, try again"; // Prompt user
+      connectionStatus = tr('Device not found, try again'); // Prompt user
       notifyListeners(); // Update UI
     }
   }
 
   void connectToDevice(BluetoothDevice device) async
   { // Handle connection
-    connectionStatus = "Connecting..."; // Status
+    connectionStatus = tr('Connecting...'); // Status
     notifyListeners(); // Update UI
 
     try
@@ -426,7 +431,7 @@ if (dataList.length > 11)
       clearSession(); // Clean memory before starting
 
       connectedDevice = device; // Save device
-      connectionStatus = "Connected to FlightLogger!"; // Success
+      connectionStatus = tr('Connected to FlightLogger!'); // Success
       notifyListeners(); // Update UI
 
       List<BluetoothService> services = await device.discoverServices(); // Get services
@@ -467,7 +472,7 @@ if (dataList.length > 11)
     }
     catch (e)
     { // Error block
-      connectionStatus = "Connection Failed"; // Status
+      connectionStatus = tr('Connection Failed'); // Status
       connectedDevice = null; // Clear failure
       notifyListeners(); // Update UI
     }
@@ -490,7 +495,7 @@ if (dataList.length > 11)
     finally
     { // This ALWAYS executes
       connectedDevice = null; // Clear memory
-      connectionStatus = "Disconnected"; // Update text
+      connectionStatus = tr('Disconnected'); // Update text
       notifyListeners(); // Update UI
     }
   }

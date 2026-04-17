@@ -18,10 +18,14 @@ class DashboardTab extends StatelessWidget
           builder: (context, setDialogState)
           { // Allow the popup itself to update visually when buttons are pressed
             return AlertDialog(
-              title: Text(appState.tr('Dashboard Settings')), // Translated Title
+              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // Lets the dialog stretch closer to the phone edges
+              titlePadding: const EdgeInsets.only(top: 12, left: 24, right: 24, bottom: 8), // Shrinks the gap above the title
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4), // Shrinks the gap between title and content
+
+              title: Text(appState.tr('Dashboard Settings')), 
               content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                  mainAxisSize: MainAxisSize.min, 
                   children: [
                     SwitchListTile(
                       title: Text(appState.tr('Enable Audible Alerts'), style: const TextStyle(fontWeight: FontWeight.bold)), // Translated Label
@@ -100,7 +104,7 @@ class DashboardTab extends StatelessWidget
     );
   }
 
-  @override
+ @override
   Widget build(BuildContext context)
   { // Build layout
     final appState = Provider.of<AppState>(context); // Connect to Brain
@@ -108,71 +112,74 @@ class DashboardTab extends StatelessWidget
     return Stack(
       children: [
         Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Vertically center content
-            children: [
-              Text(appState.connectionStatus, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)), // Status
-              const SizedBox(height: 40), // Spacing
-              
-              Text(appState.tr('Session Duration'), style: const TextStyle(fontSize: 20, color: Colors.grey)), // Translated Time Label
-              Text(appState.formattedSessionTime, style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold)), // Time Counter
-              const SizedBox(height: 40), // Spacing
-              
-              if (appState.connectedDevice == null)
-                ElevatedButton(
-                  onPressed: appState.startScan, // Scan
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0), // Padding
-                    child: Text(appState.tr('Connect to ESP32'), style: const TextStyle(fontSize: 20)), // Translated Text
-                  ),
-                )
-              else
-                ElevatedButton(
-                  onPressed: appState.disconnectFromDevice, // Disconnect
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent), // Red color
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0), // Padding
-                    child: Text(appState.tr('Disconnect'), style: const TextStyle(fontSize: 20, color: Colors.white)), // Translated Text
-                  ),
-                ),
+          // ADDED SingleChildScrollView right here so only the column scrolls
+          child: SingleChildScrollView( 
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // Vertically center content
+              children: [
+                Text(appState.connectionStatus, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)), // Status
+                const SizedBox(height: 40), // Spacing
                 
-              const SizedBox(height: 20), // Spacing
-              
-              ElevatedButton(
-                onPressed: () async
-                { // Dynamic Action Button
-                  if (appState.connectedDevice != null)
-                  { // If connected, disconnect first
-                    await appState.disconnectFromDevice(); // Trigger disconnect
-                  }
-                  appState.pickCSVFile(); // Open the file picker
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green), // Green
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0), // Padding
-                  child: Text(appState.connectedDevice == null ? appState.tr('Load Saved CSV File') : appState.tr('Load Saved CSV File'), style: const TextStyle(fontSize: 20, color: Colors.white)), // Translated Dynamic Text
-                ),
-              ),
-              const SizedBox(height: 10), // Spacing
-              
-              if (appState.totalDataRows > 0 && appState.replayIndex < appState.totalDataRows)
+                Text(appState.tr('Session Duration'), style: const TextStyle(fontSize: 20, color: Colors.grey)), // Translated Time Label
+                Text(appState.formattedSessionTime, style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold)), // Time Counter
+                const SizedBox(height: 40), // Spacing
+                
+                if (appState.connectedDevice == null)
+                  ElevatedButton(
+                    onPressed: appState.startScan, // Scan
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0), // Padding
+                      child: Text(appState.tr('Connect to ESP32'), style: const TextStyle(fontSize: 20)), // Translated Text
+                    ),
+                  )
+                else
+                  ElevatedButton(
+                    onPressed: appState.disconnectFromDevice, // Disconnect
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent), // Red color
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0), // Padding
+                      child: Text(appState.tr('Disconnect'), style: const TextStyle(fontSize: 20, color: Colors.white)), // Translated Text
+                    ),
+                  ),
+                  
+                const SizedBox(height: 20), // Spacing
+                
                 ElevatedButton(
-                  onPressed: appState.skipReplay, // Skip
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange), // Orange
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0), // Padding
-                    child: Text('Skip Replay', style: TextStyle(fontSize: 16, color: Colors.white)), // Text
+                  onPressed: () async
+                  { // Dynamic Action Button
+                    if (appState.connectedDevice != null)
+                    { // If connected, disconnect first
+                      await appState.disconnectFromDevice(); // Trigger disconnect
+                    }
+                    appState.pickCSVFile(); // Open the file picker
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green), // Green
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0), // Padding
+                    child: Text(appState.connectedDevice == null ? appState.tr('Load Saved CSV File') : appState.tr('Load Saved CSV File'), style: const TextStyle(fontSize: 20, color: Colors.white)), // Translated Dynamic Text
                   ),
                 ),
-              
-              const SizedBox(height: 20), // Spacing
-              
-              if (appState.totalDataRows > 0) ...[
-                Text('File: ${appState.loadedFileName}', style: const TextStyle(fontSize: 16)), // Name
-                Text('Data Rows: ${appState.totalDataRows}', style: const TextStyle(fontSize: 16)), // Rows
+                const SizedBox(height: 10), // Spacing
+                
+                if (appState.totalDataRows > 0 && appState.replayIndex < appState.totalDataRows)
+                  ElevatedButton(
+                    onPressed: appState.skipReplay, // Skip
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange), // Orange
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0), // Padding
+                      child: Text('Skip Replay', style: TextStyle(fontSize: 16, color: Colors.white)), // Text
+                    ),
+                  ),
+                
+                const SizedBox(height: 20), // Spacing
+                
+                if (appState.totalDataRows > 0) ...[
+                  Text('File: ${appState.loadedFileName}', style: const TextStyle(fontSize: 16)), // Name
+                  Text('Data Rows: ${appState.totalDataRows}', style: const TextStyle(fontSize: 16)), // Rows
+                ],
               ],
-            ],
-          ),
+            ),
+          ), // END of SingleChildScrollView
         ),
         
         // SETTINGS GEAR BUTTON

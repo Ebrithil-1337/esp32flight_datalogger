@@ -95,16 +95,19 @@ class AnalysisTab extends StatelessWidget
         String name = appState.getSensorName(idx); // Get central name
         Color lineCol = appState.chartColors[idx % appState.chartColors.length]; // Pull color
         
-        return GestureDetector(
-          onLongPress: () => _showRenameDialog(context, appState, idx), // Trigger popup
-          child: Row(
-            mainAxisSize: MainAxisSize.min, // Keep tight
-            children: [
-              Container(width: 12, height: 12, color: lineCol), // Box
-              const SizedBox(width: 4), // Gap
-              Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)), // Text
-            ],
-          ),
+        return Row(
+          mainAxisSize: MainAxisSize.min, // Keep tight
+          children: [
+            Container(width: 12, height: 12, color: lineCol), // Box
+            const SizedBox(width: 4), // Gap
+            Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)), // Text
+            IconButton(
+              icon: const Icon(Icons.edit, size: 16), // Pen icon
+              padding: const EdgeInsets.only(left: 4), // Small gap before the icon
+              constraints: const BoxConstraints(), // Removes default bulky button padding
+              onPressed: () => _showRenameDialog(context, appState, idx), // Trigger popup
+            ),
+          ],
         );
       }).toList(),
     );
