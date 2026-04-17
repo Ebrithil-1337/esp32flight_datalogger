@@ -173,15 +173,20 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
     'Live Data': {'en': 'Live Data', 'de': 'Live-Daten'},
     'Session Duration': {'en': 'Session Duration', 'de': 'Sitzungsdauer'},
     'Connect to ESP32': {'en': 'Connect to ESP32', 'de': 'Mit ESP32 verbinden'},
-    'Disconnect': {'en': 'Disconnect', 'de': 'Trennen'},
-    'Load Saved CSV File': {'en': 'Load Saved CSV', 'de': 'Gespeicherte CSV laden'},
-    'Clear Session': {'en': 'Clear Session', 'de': 'Sitzung daten löschen'},
+    'Disconnect': {'en': 'Disconnect', 'de': 'Disconnect'},
+    'Load Saved CSV File': {'en': 'Load Saved .CSV', 'de': 'CSV-Datei laden'},
+    'Clear Session': {'en': 'Clear Session', 'de': 'Sitzungsdaten löschen'},
     'Test Audio': {'en': 'Test Audio', 'de': 'Audio testen'},
     'Dashboard Settings': {'en': 'Dashboard Settings', 'de': 'Dashboard-Einstellungen'},
     'Voltage Warning Threshold (V)': {'en': 'Voltage Warning Threshold (V)', 'de': 'Spannungswarnung (V)'},
     'Enable Audible Alerts': {'en': 'Enable Audible Alerts', 'de': 'Akustische Warnungen aktivieren'},
     'Master toggle for all voice warnings': {'en': 'Master toggle for all voice warnings', 'de': 'Hauptschalter für alle Sprachwarnungen'},
     'Close': {'en': 'Close', 'de': 'Schließen'},
+    'Disconnected': {'en': 'Disconnected', 'de': 'Getrennt'},
+    'Scanning...': {'en': 'Scanning...', 'de': 'Suche...'},
+    'Device not found, try again': {'en': 'Device not found, try again', 'de': 'Gerät nicht gefunden, bitte erneut versuchen'},
+    'Connecting...': {'en': 'Connecting...', 'de': 'Verbinden...'},
+    'Connected to FlightLogger!': {'en': 'Connected to FlightLogger!', 'de': 'Mit FlightLogger verbunden!'},
   };
 
   String tr(String key)
