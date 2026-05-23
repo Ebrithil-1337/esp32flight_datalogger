@@ -243,6 +243,9 @@ Map<int, String> customSensorNames = {}; // Stores custom names by index
     'Rename Sensor': {'en': 'Rename Sensor', 'de': 'Sensor umbenennen'},
     'Add monitored Threshold': {'en': 'Add monitored Threshold', 'de': 'Grenzwert Überwachung hinzufügen'},
     'limit': {'en': 'limit', 'de': 'Grenzwert'},
+    'Impressum': {'en': 'Impressum', 'de': 'Impressum'},
+    'About this App': {'en': 'About this App', 'de': 'Über diese App'},
+    'Design und Entwicklung:': {'en': 'Design and Development:', 'de': 'Design und Entwicklung:'},
   };
 
   String tr(String key)

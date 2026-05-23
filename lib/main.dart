@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart'; // Core UI
-import 'package:provider/provider.dart'; // State management
-import 'providers/app_state.dart'; // The central Brain
-import 'screens/home_screen.dart'; // The navigation layout
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/app_state.dart';
+import 'screens/splash_screen.dart';
 
 void main()
 { // Boot sequence
@@ -28,7 +28,7 @@ class FlightLoggerApp extends StatelessWidget
         primarySwatch: Colors.blue, // Theme color
         useMaterial3: true, // Modern UI elements
       ),
-      home: const HomeScreen(), // Load the home screen layout
+      home: const SplashScreen(), // Load the splash screen layout
     );
   }
 }

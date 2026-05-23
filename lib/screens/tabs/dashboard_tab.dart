@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart'; // Core UI
 import 'package:provider/provider.dart'; // State management
 import '../../providers/app_state.dart'; // The Brain
+import 'impressum_tab.dart'; // Import the new screen
 
 class DashboardTab extends StatelessWidget
 { // The Dashboard UI
@@ -167,6 +168,22 @@ class DashboardTab extends StatelessWidget
                         ),
                       ],
                     ),
+                    const SizedBox(height: 10), // Spacing
+                    ElevatedButton.icon(
+                      onPressed: ()
+                      { // Open Impressum Tab
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ImpressumScreen()), // Slide in the new page
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue), // Standard blue
+                      icon: const Icon(Icons.info, color: Colors.white), // Info icon
+                      label: Text(appState.tr('Impressum'), style: const TextStyle(color: Colors.white)), // Translated Text
+                    ),
+                    
+                    
+                    // ... your existing Clear Session button is down here ...
                     const SizedBox(height: 20), // Spacing
                     ElevatedButton.icon(
                       onPressed: ()
