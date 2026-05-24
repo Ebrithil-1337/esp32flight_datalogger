@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // Core UI
 import 'package:provider/provider.dart'; // State management
-import '../../providers/app_state.dart'; // Connect to Brain
+import '../../providers/app_state.dart'; 
 
 class ImpressumScreen extends StatelessWidget 
 { // Main class for the Impressum page
@@ -23,7 +23,7 @@ class ImpressumScreen extends StatelessWidget
             const SizedBox(height: 20), // Spacing
             
             const Text('Flight Analyzer', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold), textAlign: TextAlign.center), // App Name
-            const Text('Version 1.2.1', style: TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center), // Version number
+            const Text('Version 1.2.2', style: TextStyle(fontSize: 16, color: Colors.grey), textAlign: TextAlign.center), // Version number
             
             const SizedBox(height: 40), // Spacing
             
