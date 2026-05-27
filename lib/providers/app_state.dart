@@ -518,53 +518,45 @@ if (dataList.length > 11)
     }
   }
 
-  void connectToDevice(BluetoothDevice device) async
-  { // Handle connection
-    connectionStatus = tr('Connecting...'); // Status
-    notifyListeners(); // Update UI
-
-    try
-    { // Try block
-      await device.connect(license: License.free); // Pair
-
-      clearSession(); // Clean memory before starting
-
-      connectedDevice = device; // Save device
-      connectionStatus = tr('Connected to FlightLogger!'); // Success
-      notifyListeners(); // Update UI
-
-      List<BluetoothService> services = await device.discoverServices(); // Get services
+ void connectToDevice(BluetoothDevice device) async
+  { // Connect logic
+    try 
+    { // Try connection
+      await device.connect(license: License.free);// Connect
+      List<BluetoothService> services = await device.discoverServices(); // Get all services
 
       for (BluetoothService service in services)
-      { // Loop services
-        if (service.uuid.toString() == "4fafc201-1fb5-459e-8fcc-c5c9c331914b")
-        { // Match service
-          for (BluetoothCharacteristic characteristic in service.characteristics)
-          { // Loop characteristics
-            if (characteristic.uuid.toString() == "beb5483e-36e1-4688-b7f5-ea07361b26a8")
-            { // Match data
-              await characteristic.setNotifyValue(true); // Start stream
+      { // Loop all services dynamically
+        for (BluetoothCharacteristic characteristic in service.characteristics)
+        { // Loop all characteristics 
+          if (characteristic.properties.notify)
+          { // Match ANY characteristic that has 'notify' enabled (No UUID hardcoding needed!)
+            await characteristic.setNotifyValue(true); // Start stream
 
-              bleStream = characteristic.onValueReceived.listen((value)
-              { // Save the active stream to our variable
-                String csvString = String.fromCharCodes(value); // Decode
-                recordedRows.add(csvString.trim()); // Save raw string
+            bleStream = characteristic.onValueReceived.listen((value)
+            { // Save the active stream to our variable
+              String csvString = String.fromCharCodes(value); // Decode
+              recordedRows.add(csvString.trim()); // Save raw string
 
-                List<String> dataList = csvString.split(','); // Chop
+              List<String> dataList = csvString.split(','); // Chop
 
-                processDataRow(dataList); // Process
-                if (!isZoomMode) visibleMaxX = timeCounter; // Auto scroll
+              processDataRow(dataList); // Process
+              if (!isZoomMode) visibleMaxX = timeCounter; // Auto scroll
 
-                if (flightPath.isNotEmpty && selectedTab == 2 && mapLoaded)
-                { // Camera logic
-                  try
-                  { // Try move
-                    mapController.move(flightPath.last, mapController.camera.zoom); // Move
-                  } catch (e) { /* Ignore */ }
+              if (flightPath.isNotEmpty && selectedTab == 2 && mapLoaded)
+              { // Camera logic
+                try
+                { // Try move
+                  mapController.move(flightPath.last, mapController.camera.zoom); // Move
+                } 
+                catch (e) 
+                { // Ignore map errors 
                 }
-                notifyListeners(); // Update UI
-              });
-            }
+              }
+              notifyListeners(); // Update UI
+            });
+            
+            return; // We found our data stream, exit the loops entirely
           }
         }
       }
